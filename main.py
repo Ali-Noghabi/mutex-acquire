@@ -3,6 +3,8 @@ from ctypes import c_int
 import threading
 import numpy as np
 import time
+import os
+from matrices_generator import generate_and_save_matrices, multiply_matrices
 
 # Define a compare and swap function using ctypes
 def compare_and_swap(address, old, new):
@@ -67,40 +69,81 @@ def single_thread_matrix_multiply(A, B):
 def load_matrix_from_file(filename):
     return np.loadtxt(filename, dtype=int)
 
-# Load matrices from file
-A = load_matrix_from_file('matrices/matrix_A.txt')
-B = load_matrix_from_file('matrices/matrix_B.txt')
+# Parameters
+matrix_size_A = 300  # Number of rows in matrix A
+matrix_size_B = 400  # Number of columns in matrix A and rows in matrix B
+file_path_A = "matrices/matrix_A.txt"
+file_path_B = "matrices/matrix_B.txt"
+result_file_path = "matrices/result.txt"
+report_file_path = "matrices/result_report.txt"
+num_iterations = 100
 
-# Perform matrix multiplication with threading
-start_time = time.time()
-C_threaded = threaded_matrix_multiply(A, B)
-end_time = time.time()
-threaded_time = end_time - start_time
+# Ensure the directory exists
+os.makedirs(os.path.dirname(report_file_path), exist_ok=True)
 
-# Perform matrix multiplication without threading
-start_time = time.time()
-C_single_thread = single_thread_matrix_multiply(A, B)
-end_time = time.time()
-single_thread_time = end_time - start_time
+# Timing accumulators
+total_threaded_time = 0
+total_single_thread_time = 0
+total_numpy_time = 0
 
-# Compare results
-print("Threaded matrix multiplication took: {:.4f} seconds".format(threaded_time))
-print("Single-threaded matrix multiplication took: {:.4f} seconds".format(single_thread_time))
+with open(report_file_path, 'w') as report_file:
+    for i in range(num_iterations):
+        print(f"Iteration {i+1}/{num_iterations}")
 
-# Ensure the results are the same
-assert np.array_equal(C_threaded, C_single_thread), "The results are different!"
+        # Generate and save matrices
+        generate_and_save_matrices(matrix_size_A, matrix_size_B, file_path_A, file_path_B)
 
-print("Results are the same for both methods.")
+        # Load matrices from file
+        A = load_matrix_from_file(file_path_A)
+        B = load_matrix_from_file(file_path_B)
 
-# Load result from result.txt
-result_from_file = load_matrix_from_file('matrices/result.txt')
+        # Perform numpy-based matrix multiplication and save result to file (for validation)
+        numpy_time = multiply_matrices(file_path_A, file_path_B, result_file_path)
+        total_numpy_time += numpy_time
 
-# Compare with result from file
-assert np.array_equal(C_threaded, result_from_file), "The result from the file is different!"
+        # Load result from result.txt
+        result_from_file = load_matrix_from_file(result_file_path)
 
-print("The result from the file matches the computed result.")
+        # Perform matrix multiplication with threading
+        start_time = time.time()
+        C_threaded = threaded_matrix_multiply(A, B)
+        end_time = time.time()
+        threaded_time = end_time - start_time
+        total_threaded_time += threaded_time
 
-# Append the timing results to result_report.txt
-with open('matrices/result_report.txt', 'a') as report_file:
-    report_file.write(f"Threaded matrix multiplication took: {threaded_time:.4f} seconds\n")
-    report_file.write(f"Single-threaded matrix multiplication took: {single_thread_time:.4f} seconds\n")
+        # Perform matrix multiplication without threading
+        start_time = time.time()
+        C_single_thread = single_thread_matrix_multiply(A, B)
+        end_time = time.time()
+        single_thread_time = end_time - start_time
+        total_single_thread_time += single_thread_time
+
+        # Compare results
+        assert np.array_equal(C_threaded, C_single_thread), "The results are different!"
+        assert np.array_equal(C_threaded, result_from_file), "The result from the file is different!"
+        
+        print("Results are the same for all methods.")
+
+        # Log the times for this iteration
+        report_file.write(f"Iteration {i+1}\n")
+        report_file.write(f"Time using numpy: {numpy_time:.4f} seconds\n")
+        report_file.write(f"Threaded matrix multiplication time: {threaded_time:.4f} seconds\n")
+        report_file.write(f"Single-threaded matrix multiplication time: {single_thread_time:.4f} seconds\n")
+        report_file.write("\n")
+
+# Calculate average times
+average_threaded_time = total_threaded_time / num_iterations
+average_single_thread_time = total_single_thread_time / num_iterations
+average_numpy_time = total_numpy_time / num_iterations
+
+# Output average times
+print(f"Average numpy matrix multiplication time: {average_numpy_time:.4f} seconds")
+print(f"Average threaded matrix multiplication time: {average_threaded_time:.4f} seconds")
+print(f"Average single-threaded matrix multiplication time: {average_single_thread_time:.4f} seconds")
+
+# Append the average timing results to result_report.txt
+with open(report_file_path, 'a') as report_file:
+    report_file.write("Average times for all iterations\n")
+    report_file.write(f"Average numpy matrix multiplication time: {average_numpy_time:.4f} seconds\n")
+    report_file.write(f"Average threaded matrix multiplication time: {average_threaded_time:.4f} seconds\n")
+    report_file.write(f"Average single-threaded matrix multiplication time: {average_single_thread_time:.4f} seconds\n")

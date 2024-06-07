@@ -44,18 +44,21 @@ def multiply_matrices(file_path_A, file_path_B, result_file_path):
         for row in result:
             result_file.write(' '.join(map(str, row)) + '\n')
 
-    # Save multiplication time to file
+    # Append multiplication time to report file
     report_file_path = result_file_path.split('.')[0] + "_report.txt"
-    with open(report_file_path, 'w') as report_file:
-        report_file.write("matrix multiplication using numpy took: {} seconds\n".format(multiplication_time))
+    with open(report_file_path, 'a') as report_file:
+        report_file.write("Matrix multiplication using numpy took: {} seconds\n".format(multiplication_time))
 
-matrix_size_A = 300  # Number of rows in matrix A
-matrix_size_B = 400  # Number of columns in matrix A and rows in matrix B
-file_path_A = "matrices/matrix_A.txt"
-file_path_B = "matrices/matrix_B.txt"
-result_file_path = "matrices/result.txt"
+    return multiplication_time
 
-generate_and_save_matrices(
-    matrix_size_A, matrix_size_B, file_path_A, file_path_B)
-
-multiply_matrices(file_path_A, file_path_B, result_file_path)
+# Example usage in main.py:
+# matrix_size_A = 300  # Number of rows in matrix A
+# matrix_size_B = 400  # Number of columns in matrix A and rows in matrix B
+# file_path_A = "matrices/matrix_A.txt"
+# file_path_B = "matrices/matrix_B.txt"
+# result_file_path = "matrices/result.txt"
+#
+# generate_and_save_matrices(
+#     matrix_size_A, matrix_size_B, file_path_A, file_path_B)
+#
+# multiply_matrices(file_path_A, file_path_B, result_file_path)
