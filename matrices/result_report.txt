@@ -1,0 +1,3 @@
+matrix multiplication using numpy took: 0.024143218994140625 seconds
+Threaded matrix multiplication took: 7.6083 seconds
+Single-threaded matrix multiplication took: 7.6397 seconds
