@@ -76,7 +76,7 @@ file_path_A = "matrices/matrix_A.txt"
 file_path_B = "matrices/matrix_B.txt"
 result_file_path = "matrices/result.txt"
 report_file_path = "matrices/result_report.txt"
-num_iterations = 100
+num_iterations = 5
 
 # Ensure the directory exists
 os.makedirs(os.path.dirname(report_file_path), exist_ok=True)
